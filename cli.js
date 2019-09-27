@@ -17,7 +17,7 @@ const filepath = ts => {
   const day = ts.getUTCDate().toString().toString().padStart(2, '0')
   const hour = ts.getUTCHours()
   const filename = `${year}-${month}-${day}-${hour}.json.br`
-  const dir = path.join(...[process.cwd(), year, month, day].map(i => i.toString()))
+  const dir = path.join(...[year, month, day].map(i => i.toString()))
   mkdirp.sync(dir)
   const f = `${dir}/${filename}`
   console.log(`git lfs pull --include "${f}"`)
