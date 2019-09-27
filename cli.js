@@ -20,6 +20,7 @@ const filepath = ts => {
   const dir = path.join(...[process.cwd(), year, month, day].map(i => i.toString()))
   mkdirp.sync(dir)
   const f = `${dir}/${filename}`
+  console.log(`git lfs pull --include "${f}"`)
   execSync(`git lfs pull --include "${f}"`)
   return f 
 }
