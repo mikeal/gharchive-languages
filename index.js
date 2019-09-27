@@ -7,44 +7,55 @@ const sleep = i => new Promise(resolve => setTimeout(resolve, i))
 
 const sum = (x, y) => x + y
 
+const abuse = 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.'
+
 const query = async repos => {
   const qs = repos.map(r => `repo:${r}`).join(' ')
-  const response = await graphql(
-    `{ 
-      search(query: "${qs} fork:true", type: REPOSITORY, first: 100) {
-        repositoryCount
-        nodes {
-          ... on Repository {
-            nameWithOwner
-            languages (first: 100) {
-              edges {
-                node {
-                  name
+  let response
+  try {
+    response = await graphql(
+      `{ 
+        search(query: "${qs} fork:true", type: REPOSITORY, first: 100) {
+          repositoryCount
+          nodes {
+            ... on Repository {
+              nameWithOwner
+              languages (first: 100) {
+                edges {
+                  node {
+                    name
+                  }
+                  size
                 }
-                size
               }
             }
           }
         }
+        rateLimit {
+          limit
+          cost
+          remaining
+          resetAt
+        }
       }
-      rateLimit {
-        limit
-        cost
-        remaining
-        resetAt
+      `,
+      {
+        headers: {
+          authorization: `token ${process.env.GHTOKEN || process.env.GITHUB_TOKEN}`
+        }
       }
+    )
+  } catch (e) {
+    if (e.message.includes(abuse)) {
+      console.log('abuse sleep')
+      await sleep(1000 * 60 * 60 * 2)
+      return query(repos)
     }
-    `,
-    {
-      headers: {
-        authorization: `token ${process.env.GHTOKEN || process.env.GITHUB_TOKEN}`
-      }
-    }
-  )
+  }
 
   const { remaining, cost, resetAt } = response.rateLimit
   if ((remaining - cost) < 0) {
-    console.log('sleeping')
+    console.log('rate limit sleep')
     await sleep(((new Date(resetAt)).getTime() - Date.now()) + 1000)
   }
   // console.log(response.rateLimit)
