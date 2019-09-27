@@ -50,6 +50,8 @@ const query = async repos => {
       console.log('abuse sleep')
       await sleep(1000 * 60 * 60 * 2)
       return query(repos)
+    } else {
+      throw e
     }
   }
 
