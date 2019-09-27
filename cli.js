@@ -6,6 +6,7 @@ const brotli = require('brotli-max')
 const { readFile, stat } = require('fs').promises
 const { brotliDecompress } = require('zlib')
 const { promisify } = require('util')
+const { execSync } = require('child_process')
 const decompress = promisify(brotliDecompress)
 const onehour = 1000 * 60 * 60
 const seen = {}
@@ -18,7 +19,9 @@ const filepath = ts => {
   const filename = `${year}-${month}-${day}-${hour}.json.br`
   const dir = path.join(...[process.cwd(), year, month, day].map(i => i.toString()))
   mkdirp.sync(dir)
-  return `${dir}/${filename}`
+  const f = `${dir}/${filename}`
+  execSync(`git lfs pull --include "${f}"`)
+  return f 
 }
 
 const load = async filename => {
@@ -36,6 +39,7 @@ const exists = async filename => {
 }
 
 const action = async () => {
+  execSync('git lfs install')
   let now = Date.now()
   let i = now
   while (i > (now - (onehour * 20))) {
@@ -44,7 +48,7 @@ const action = async () => {
     const filename = filepath(new Date(i))
     if (await exists(filename)) {
       Object.assign(seen, await load(filename))
-      console.log('seen has loaded', Object.keys(seen).length)
+      console.log('seen has loaded', Object.keys(seen).length, filename)
       continue
     }
 
@@ -53,7 +57,7 @@ const action = async () => {
       repos = await getLanguages.getRepos(i)
     } catch (e) {
       if (e.statusCode === 404) {
-        console.log(i, 'not available')
+        console.log(i, 'not available', filename)
         continue
       }
       throw e
@@ -63,7 +67,7 @@ const action = async () => {
     const _repos = Array.from(repos)
 
     for (let repo of _repos) {
-      if (seen[repo]) {
+      if (typeof seen[repo] !== 'undefined') {
         results[0][repo] = seen[repo]
         repos.delete(repo)
       }
@@ -73,7 +77,7 @@ const action = async () => {
 
     while (repos.length) {
       results.push(await getLanguages.query(repos.splice(0, 100)))
-      console.log(repos.length, 'remaining for', i)
+      console.log(repos.length, 'remaining for', filename)
     }
     const hourData = Object.assign(...results)
     await brotli(Buffer.from(JSON.stringify(hourData)), filepath(new Date(i)))

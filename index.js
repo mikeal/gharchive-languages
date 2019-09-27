@@ -61,6 +61,9 @@ const query = async repos => {
     results[node.nameWithOwner] = value
   }
   // console.log(inspect(nodes, { depth: Infinity }))
+  for (let repo of repos) {
+    if (!results[repo]) results[repo] = null
+  }
   return results
 }
 
