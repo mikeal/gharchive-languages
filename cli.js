@@ -9,7 +9,7 @@ const { promisify } = require('util')
 const { execSync } = require('child_process')
 const decompress = promisify(brotliDecompress)
 const onehour = 1000 * 60 * 60
-const seen = {}
+const seen = new Map()
 
 const filepath = ts => {
   const year = ts.getUTCFullYear()
@@ -39,17 +39,22 @@ const exists = async filename => {
   return true
 }
 
-const action = async () => {
+const now = Date.now()
+
+const action = async (end=(now - (onehour * 20))) => {
   execSync('git lfs install')
-  let now = Date.now()
+  let now = Date.now() - (onehour * 6)
+  end = (new Date(end)).getTime()
   let i = now
-  while (i > (now - (onehour * 20))) {
+  while (i >= end) {
     i -= onehour
 
     const filename = filepath(new Date(i))
     if (await exists(filename)) {
-      Object.assign(seen, await load(filename))
-      console.log('seen has loaded', Object.keys(seen).length, filename)
+      for (const [key, value] of Object.entries(await load(filename))) {
+        seen.set(key, value)
+      }
+      console.log('seen has loaded', seen.size, filename)
       continue
     }
 
@@ -68,8 +73,8 @@ const action = async () => {
     const _repos = Array.from(repos)
 
     for (let repo of _repos) {
-      if (typeof seen[repo] !== 'undefined') {
-        results[0][repo] = seen[repo]
+      if (seen.has(repo)) {
+        results[0][repo] = seen.get(repo)
         repos.delete(repo)
       }
     }
@@ -82,8 +87,22 @@ const action = async () => {
     }
     const hourData = Object.assign(...results)
     await brotli(Buffer.from(JSON.stringify(hourData)), filepath(new Date(i)))
-    Object.assign(seen, hourData)
+    for (const [key, value] of Object.entries(hourData)) {
+      seen.set(key, value)
+    }
+    console.log('cachesize', seen.size)
   }
 }
 
-action()
+const runAction = argv => {
+  return action(argv.start)
+}
+
+const yargs = require('yargs')
+const args = yargs
+  .command('action [start]', 'run the hourly github action', () => {}, runAction)
+  .argv
+
+if (!args._.length) {
+  yargs.showHelp()
+}
