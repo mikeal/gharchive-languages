@@ -9,7 +9,6 @@ const { promisify } = require('util')
 const { execSync } = require('child_process')
 const decompress = promisify(brotliDecompress)
 const onehour = 1000 * 60 * 60
-const seen = new Map()
 
 const filepath = ts => {
   const year = ts.getUTCFullYear()
@@ -41,7 +40,8 @@ const exists = async filename => {
 
 const now = Date.now()
 
-const action = async (end=(now - (onehour * 20))) => {
+const action = async (end=(now - (onehour * 24)), cacheFile) => {
+  const seen = require('./lib/cache')(cacheFile)
   execSync('git lfs install')
   let now = Date.now() - (onehour * 6)
   end = (new Date(end)).getTime()
@@ -51,10 +51,10 @@ const action = async (end=(now - (onehour * 20))) => {
 
     const filename = filepath(new Date(i))
     if (await exists(filename)) {
-      for (const [key, value] of Object.entries(await load(filename))) {
-        seen.set(key, value)
+      if (!await seen.loaded(filename)) {
+        let o = await load(filename)
+        await seen.add(filename, o)
       }
-      console.log('seen has loaded', seen.size, filename)
       continue
     }
 
@@ -69,15 +69,9 @@ const action = async (end=(now - (onehour * 20))) => {
       throw e
     }
 
-    const results = [{}]
-    const _repos = Array.from(repos)
-
-    for (let repo of _repos) {
-      if (seen.has(repo)) {
-        results[0][repo] = seen.get(repo)
-        repos.delete(repo)
-      }
-    }
+    const cached = await seen.get(Array.from(repos))
+    const results = [cached]
+    Object.keys(cached).forEach(k => repos.delete(k))
 
     repos = Array.from(repos)
 
@@ -87,15 +81,21 @@ const action = async (end=(now - (onehour * 20))) => {
     }
     const hourData = Object.assign(...results)
     await brotli(Buffer.from(JSON.stringify(hourData)), filepath(new Date(i)))
-    for (const [key, value] of Object.entries(hourData)) {
-      seen.set(key, value)
-    }
-    console.log('cachesize', seen.size)
+    await seen.add(filename, hourData)
   }
 }
 
 const runAction = argv => {
-  return action(argv.start)
+  return action(argv.start, argv.cachefile)
+}
+
+const options = yargs => {
+  yargs.positional('start', {
+    desc: 'How far back to go, defaults to 24 hours'
+  })
+  yargs.option('cachefile', {
+    desc: 'Cachfile location, defaults to a tmpdir'
+  })
 }
 
 const yargs = require('yargs')

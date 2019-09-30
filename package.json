@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "hundreds node test/test-cache.js"
   },
   "keywords": [],
   "author": "Mikeal Rogers <mikeal.rogers@gmail.com> (https://www.mikealrogers.com/)",
@@ -13,8 +13,14 @@
     "@octokit/graphql": "^4.2.0",
     "bent": "^7.0.1",
     "brotli-max": "^0.1.1",
+    "level": "^5.0.1",
     "min-gharchive": "^0.3.1",
     "mkdirp": "^0.5.1",
-    "pull-gharchive-minimized": "^1.0.1"
+    "pull-gharchive-minimized": "^1.0.1",
+    "tempy": "^0.3.0"
+  },
+  "devDependencies": {
+    "hundreds": "0.0.2",
+    "standard": "^14.3.1"
   }
 }
