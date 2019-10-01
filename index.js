@@ -56,6 +56,7 @@ const query = async repos => {
   }
 
   const { remaining, cost, resetAt } = response.rateLimit
+  console.log('rate limit', { remaining, cost, resetAt })
   if ((remaining - cost) < 0) {
     console.log('rate limit sleep')
     await sleep(((new Date(resetAt)).getTime() - Date.now()) + 1000)
