@@ -1,5 +1,3 @@
-DISABLED
-
 on:
   schedule:
     - cron:  '10 * * * *'
