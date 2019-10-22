@@ -40,10 +40,10 @@ const exists = async filename => {
 
 const now = Date.now()
 
-const action = async (end=(now - (onehour * 4)), cacheFile) => {
+const fill = async (end=(now - (onehour * 48)), cacheFile) => {
   const seen = require('./lib/cache')(cacheFile)
   execSync('git lfs install')
-  let now = Date.now() - (onehour * 3)
+  let now = Date.now() - (onehour * 9)
   end = (new Date(end)).getTime()
   let i = now
   while (i >= end) {
@@ -102,8 +102,8 @@ const runHour = async argv => {
 }
 
 
-const runAction = argv => {
-  return action(argv.start, argv.cachefile)
+const runFill = argv => {
+  return fill(argv.start, argv.cachefile)
 }
 
 const options = yargs => {
@@ -118,7 +118,7 @@ const options = yargs => {
 const yargs = require('yargs')
 const args = yargs
   .command('hour <hour>', 'pull and save an hour of data', () => {}, runHour)
-  .command('fill [start]', 'back fill until you reach start', () => {}, runAction)
+  .command('fill [start]', 'back fill until you reach start', () => {}, runFill)
   .argv
 
 if (!args._.length) {
