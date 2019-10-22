@@ -1,8 +1,6 @@
-DISABLED
-
 on:
   schedule:
-    - cron:  '30 * * * *'
+    - cron:  '31 * * * *'
 name: Pull 6 Hours Ago
 jobs:
   build:
