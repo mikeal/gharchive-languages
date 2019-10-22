@@ -1,6 +1,6 @@
 on:
   schedule:
-    - cron:  '31 * * * *'
+    - cron:  '39 * * * *'
 name: Pull 6 Hours Ago
 jobs:
   build:
@@ -10,6 +10,8 @@ jobs:
     - uses: actions/checkout@master
     - run: npm install
     - run: ./cli.js hour "$(date --date="6 hours ago")"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - uses: mikeal/publish-to-github-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
