@@ -2,7 +2,7 @@ DISABLED
 
 on:
   schedule:
-    - cron:  '10 * * * *'
+    - cron:  '30 * * * *'
 name: Pull 6 Hours Ago
 jobs:
   build:
