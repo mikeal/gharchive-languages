@@ -21,7 +21,7 @@ const filepath = ts => {
   const f = `${dir}/${filename}`
   console.log(`git lfs pull --include "${f}"`)
   execSync(`git lfs pull --include "${f}"`)
-  return f 
+  return f
 }
 
 const load = async filename => {
@@ -40,10 +40,10 @@ const exists = async filename => {
 
 const now = Date.now()
 
-const action = async (end=(now - (onehour * 24)), cacheFile) => {
+const action = async (end=(now - (onehour * 4)), cacheFile) => {
   const seen = require('./lib/cache')(cacheFile)
   execSync('git lfs install')
-  let now = Date.now() - (onehour * 6)
+  let now = Date.now() - (onehour * 3)
   end = (new Date(end)).getTime()
   let i = now
   while (i >= end) {
@@ -85,6 +85,23 @@ const action = async (end=(now - (onehour * 24)), cacheFile) => {
   }
 }
 
+const runHour = async argv => {
+  const i = new Date(argv.hour)
+  const filename = filepath(new Date(i))
+
+  const repos = Array.from(await getLanguages.getRepos(i))
+
+  const results = []
+
+  while (repos.length) {
+    results.push(await getLanguages.query(repos.splice(0, 100)))
+    console.log(repos.length, 'remaining for', filename)
+  }
+  const hourData = Object.assign(...results)
+  await brotli(Buffer.from(JSON.stringify(hourData)), filepath(new Date(i)))
+}
+
+
 const runAction = argv => {
   return action(argv.start, argv.cachefile)
 }
@@ -100,7 +117,8 @@ const options = yargs => {
 
 const yargs = require('yargs')
 const args = yargs
-  .command('action [start]', 'run the hourly github action', () => {}, runAction)
+  .command('hour <hour>', 'pull and save an hour of data', () => {}, runHour)
+  .command('fill [start]', 'back fill until you reach start', () => {}, runAction)
   .argv
 
 if (!args._.length) {

@@ -8,13 +8,14 @@ const sleep = i => new Promise(resolve => setTimeout(resolve, i))
 const sum = (x, y) => x + y
 
 const abuse = 'You have triggered an abuse detection mechanism. Please wait a few minutes before you try again.'
+const rando = 'Something went wrong while executing your query'
 
-const query = async repos => {
+const query = async (repos, retries=0) => {
   const qs = repos.map(r => `repo:${r}`).join(' ')
   let response
   try {
     response = await graphql(
-      `{ 
+      `{
         search(query: "${qs} fork:true", type: REPOSITORY, first: 100) {
           repositoryCount
           nodes {
@@ -46,10 +47,18 @@ const query = async repos => {
       }
     )
   } catch (e) {
+    if (retries > 4) {
+      console.error('retries exceeded')
+      return []
+    }
     if (e.message.includes(abuse)) {
       console.log('abuse sleep')
-      await sleep(1000 * 60 * 60 * 2)
-      return query(repos)
+      await sleep(1000 * 60)
+      return query(repos, retries + 1)
+    } else if (e.message.includes(rando)) {
+      console.log('random GH bug:', e.message)
+      await sleep(1000 * 10)
+      return query(repos, retries + 1)
     } else {
       throw e
     }
