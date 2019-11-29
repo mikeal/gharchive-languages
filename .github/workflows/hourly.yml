@@ -9,7 +9,7 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - run: npm install
-    - run: ./cli.js hour "$(date --date="6 hours ago")"
+    - run: ./cli.js hour "$(date --date="3 hours ago")"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - uses: mikeal/publish-to-github-action@master
