@@ -1,7 +1,7 @@
 on:
   schedule:
     - cron:  '0 * * * *'
-name: Pull 6 Hours Ago
+name: Pull 3 Hours Ago
 jobs:
   build:
     name: Pull
