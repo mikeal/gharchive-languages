@@ -14,21 +14,22 @@ the langauge data is fairly consistent with the state of the
 repository at that time.
 
 All data prior to September 27th 2019 was back filled (a process
-that is still ongoing) and is **not** the langauge data the time
+that is still ongoing) and is **not** the langauge data at the time
 the activity took place but is instead from some time after
 September 27th.
 
 The languages used in a repository don't shift that much over time
 so this old data is still useful in approximating macro trends like
-language market share even though the per-repository data is not perfect.
-Another factor to consider is that the old the data we are back filling
+language market share even though the data is not perfect.
+
+Another factor to consider is that the older the data we are back filling
 the more likely a repository is to have been deleted, moved, or renamed
 which will give us a null value for the language data in the API.
 
-It's very important when calculating market share about programming
-languages to remove this null data from the market share since it
+It's very important when calculating market share estimatest to 
+remove this null data from the market share since it
 will distort old data more than new data and also because changes in
 GitHub's product could effect this as well.
 
-In other words, a null value means "not data available" and not
+In other words, a null value means "no data available" and not
 "cannot determine languages."
